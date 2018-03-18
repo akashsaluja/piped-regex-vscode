@@ -1,5 +1,5 @@
 {
-    "name": "regex-recursive",
+    "name": "piped-regex-vscode",
     "displayName": "Regex Recursive Filter Search + Replace",
     "description": "It lets you add multiple filters recursively to search and replace.",
     "version": "0.0.1",
