@@ -29,13 +29,18 @@ export function activate(context: vscode.ExtensionContext) {
         return indexInSuffix < 0 ? indexInSuffix : indexInSuffix + i;
     };
 
-
-
-
-
     const extractFilterRegex = function (originalInput: string): string[] {
         const regex: RegExp = /(f \".*?\")/g;
         return (<RegExpMatchArray>originalInput.match(regex));
+    }
+
+    const extractReplaceString = function (originalInput: string): string {
+        const regex: RegExp = /(r \".*?\")/g;
+        const matches: string[] = (<RegExpMatchArray>originalInput.match(regex));
+        if (matches === null || matches.length !== 1) {
+            return "";
+        }
+        return matches[0].slice(3, matches[0].length - 1);
     }
 
     const decorationType = vscode.window.createTextEditorDecorationType({
@@ -87,6 +92,7 @@ export function activate(context: vscode.ExtensionContext) {
             let replace: string;
             //extract regex out of inputString
             filters = extractFilterRegex(<string>inputString);
+            replace = extractReplaceString(<string>inputString);
             let toBeFiltered: Snippet[] = [];
             toBeFiltered.push({ index: 0, content: text });
             filters.forEach((filter) => {
@@ -102,10 +108,12 @@ export function activate(context: vscode.ExtensionContext) {
             });
             const activeEditor = (<vscode.TextEditor>vscode.window.activeTextEditor);
             const decorations: vscode.DecorationOptions[] = [];
+            const ranges: vscode.Range[] = [];
             toBeFiltered.forEach((entry: Snippet) => {
                 let match;
                 const startPos = activeEditor.document.positionAt(<number>entry.index);
                 const endPos = activeEditor.document.positionAt(<number>entry.index + <number>entry.content.length);
+                ranges.push(new vscode.Range(startPos, endPos));
                 const decoration = { range: new vscode.Range(startPos, endPos), hoverMessage: "Finally found" };
                 decorations.push(decoration);
                 // const reg = new RegExp(entry.content, 'g');
@@ -116,6 +124,13 @@ export function activate(context: vscode.ExtensionContext) {
                 //     decorations.push(decoration);
                 // }
             });
+            if (replace !== "") {
+                activeEditor.edit(function (editBuilder: vscode.TextEditorEdit) {
+                    ranges.forEach((range) => {
+                        editBuilder.replace(range, replace);
+                    });
+                });
+            }
 
             (<vscode.TextEditor>vscode.window.activeTextEditor).setDecorations(decorationType, decorations);
             // console.log((<vscode.TextEditor>editor).selection);
