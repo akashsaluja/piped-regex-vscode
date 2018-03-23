@@ -58,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
+    let disposable = vscode.commands.registerCommand('extension.pipedRegex', () => {
         // The code you place here will be executed every time your command is executed
         let editor = vscode.window.activeTextEditor;
         const inputOptions: vscode.InputBoxOptions = {
@@ -81,10 +81,12 @@ export function activate(context: vscode.ExtensionContext) {
             //validate
             let editor = vscode.window.activeTextEditor;
             if (editor === null) {
+                vscode.window.showInformationMessage("Please open a file to use this regex");
                 return "Please open a file to use this regex";
             }
             if (inputString === undefined || validateInput(inputString) === -1) {
                 vscode.window.showInformationMessage("Please enter a valid format");
+                return "Please enter a valid format";
             }
             let text = (<vscode.TextEditor>editor).document.getText();
             //separate out regex
@@ -98,11 +100,18 @@ export function activate(context: vscode.ExtensionContext) {
             filters.forEach((filter) => {
                 const temparr: Snippet[] = [];
                 toBeFiltered.forEach((snippet) => {
-                    const reg = new RegExp(filter.slice(3, filter.length - 1), 'g');
-                    let match;
-                    while (match = reg.exec(snippet.content)) {
-                        temparr.push({ index: snippet.index + match.index, content: match[0] });
+                    try {
+                        const reg = new RegExp(filter.slice(3, filter.length - 1), 'g');
+                        let match;
+                        while (match = reg.exec(snippet.content)) {
+                            temparr.push({ index: snippet.index + match.index, content: match[0] });
+                        }
+                    } catch (e) {
+                        vscode.window.showInformationMessage("Something wrong with regex");
+                        return "Something wrong with regex";
                     }
+
+
                 });
                 toBeFiltered = temparr;
             });
