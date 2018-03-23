@@ -50,11 +50,13 @@ export function activate(context: vscode.ExtensionContext) {
         overviewRulerLane: vscode.OverviewRulerLane.Right,
         light: {
             // this color will be used in light color themes
-            borderColor: 'darkblue'
+            borderColor: 'darkblue',
+            backgroundColor: 'lightgreen'
         },
         dark: {
             // this color will be used in dark color themes
-            borderColor: 'lightblue'
+            borderColor: 'lightblue',
+            backgroundColor: 'lightgreen'
         }
     });
 
@@ -116,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
                 toBeFiltered = temparr;
             });
             const activeEditor = (<vscode.TextEditor>vscode.window.activeTextEditor);
-            const decorations: vscode.DecorationOptions[] = [];
+            let decorations: vscode.DecorationOptions[] = [];
             const ranges: vscode.Range[] = [];
             toBeFiltered.forEach((entry: Snippet) => {
                 let match;
@@ -133,15 +135,45 @@ export function activate(context: vscode.ExtensionContext) {
                 //     decorations.push(decoration);
                 // }
             });
+            (<vscode.TextEditor>vscode.window.activeTextEditor).setDecorations(decorationType, decorations);
+            let offset: number = 0;
+            let prevLine: number = ranges[0].start.line;
+            let newHighlightRanges: vscode.Range[] = []
             if (replace !== "") {
-                activeEditor.edit(function (editBuilder: vscode.TextEditorEdit) {
-                    ranges.forEach((range) => {
-                        editBuilder.replace(range, replace);
-                    });
+                vscode.window.showWarningMessage("Going ahead with replace, Are you sure?", "Yes", "No").then((selectedValue) => {
+                    if (selectedValue === "Yes") {
+                        activeEditor.edit(function (editBuilder: vscode.TextEditorEdit) {
+                            ranges.forEach((range) => {
+                                const diff: number = replace.length - (range.end.character - range.start.character);
+                                if (prevLine !== range.start.line) {
+                                    offset = 0;
+                                    prevLine = range.start.line;
+                                }
+                                newHighlightRanges.push(new vscode.Range(new vscode.Position(range.start.line, range.start.character + offset), new vscode.Position(range.end.line, range.end.character + offset + diff)));
+                                editBuilder.replace(range, replace);
+
+                                offset = offset + diff;
+
+
+                            });
+                        }).then((done: boolean) => {
+                            if (done) {
+                                decorations = [];
+                                newHighlightRanges.forEach((range) => {
+                                    const decoration = { range: range, hoverMessage: "Replaced" };
+                                    decorations.push(decoration);
+                                });
+                                (<vscode.TextEditor>vscode.window.activeTextEditor).setDecorations(decorationType, decorations);
+                            }
+                        });
+                    } else {
+                        vscode.window.showInformationMessage("No replace happened");
+                    }
                 });
+
             }
 
-            (<vscode.TextEditor>vscode.window.activeTextEditor).setDecorations(decorationType, decorations);
+
             // console.log((<vscode.TextEditor>editor).selection);
             // (<vscode.TextEditor>editor).selections[0] = new vscode.Selection(new vscode.Position(1, 3), new vscode.Position(1, 5));
 
