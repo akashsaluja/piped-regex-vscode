@@ -19,7 +19,9 @@ One or Multiple`f{space}"{regex}"` followed by `{space}r{space}{regex}`
 Examples:
 
 `f "tajmahal" f "mahal"` -- It will search the text for `mahal` wherever it appeared with `tajmahal`
+
 `f "tajmahal" f "mahal" r "Palace"` -- It will replace the mahal which occurred with `tajmahal` making it finally `tajPalace`
+
 `f "\$\d+" f "\d+" r "100"` -- It will replace every figure which is preceded by $ and change the currency to 100.
 
 
