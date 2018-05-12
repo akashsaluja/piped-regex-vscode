@@ -4,6 +4,7 @@
     "description": "It lets you add multiple filters recursively to search and replace.",
     "version": "0.0.1",
     "publisher": "akashsaluja",
+    "repository": "https://github.com/akashsaluja/piped-regex-vscode/",
     "engines": {
         "vscode": "^1.21.0"
     },
